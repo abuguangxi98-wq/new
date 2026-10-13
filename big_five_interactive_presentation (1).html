@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Five Interactive Presentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fafafa;
+            color: #111827;
+        }
+
+        .screen {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+            transform: translateY(10px);
+        }
+        .screen.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .choice-btn {
+            transition: all 0.2s ease;
+        }
+        .choice-btn:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+        }
+
+        .slide-card {
+            background: linear-gradient(145deg, #ffffff, #f9fafb);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-blue-100 selection:text-blue-900">
+
+    <main id="screen-welcome" class="screen active flex-col items-center justify-center flex-grow p-6">
+        <div class="max-w-3xl w-full slide-card p-10 md:p-16 rounded-3xl border border-gray-100 text-center">
+            <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zm-7.518-.267A8.25 8.25 0 1120.25 10.5M8.288 14.212A5.25 5.25 0 1117.25 10.5" />
+                </svg>
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold tracking-tight mb-6 text-gray-900">ビッグファイブ性格診断</h1>
+            <p class="text-lg text-gray-500 mb-10 leading-relaxed max-w-xl mx-auto">
+                科学的に最も信頼性が高いとされる5つの性格特性を測定します。<br>
+                5つの質問に直感で答えて、あなたの性格プロファイルを確認しましょう。
+            </p>
+            <button onclick="startTest()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-10 rounded-full transition-all shadow-lg hover:shadow-blue-500/30 focus:outline-none focus:ring-4 focus:ring-blue-200 text-lg">
+                診断をスタート
+            </button>
+        </div>
+    </main>
+
+    <main id="screen-test" class="screen flex-col items-center justify-center flex-grow p-4">
+        <div class="max-w-2xl w-full">
+            
+            <!-- Progress section -->
+            <div class="mb-10">
+                <div class="flex justify-between text-sm font-semibold text-gray-500 mb-3">
+                    <span class="uppercase tracking-wider">Progress</span>
+                    <span id="progress-text">1 / 5</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div id="progress-bar" class="bg-blue-500 h-full rounded-full transition-all duration-500 ease-out" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div class="slide-card p-8 md:p-12 rounded-3xl border border-gray-100 flex flex-col">
+                <h2 id="question-text" class="text-2xl md:text-3xl font-bold text-center mb-10 text-gray-800 leading-snug min-h-[5rem] flex items-center justify-center">
+                    <!-- Question will be injected here -->
+                </h2>
+
+                <!-- Strictly 5 Options (Vertical layout for readability) -->
+                <div id="choices-container" class="flex flex-col gap-3">
+                    <!-- Choices will be injected here via JS to guarantee 5 options -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <main id="screen-result" class="screen flex-col items-center py-12 px-4">
+        <div class="max-w-5xl w-full">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold tracking-tight mb-3">診断完了</h2>
+                <p class="text-lg text-gray-500">あなたのビッグファイブ・プロフィールです</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+                
+                <!-- Chart Area -->
+                <div class="lg:col-span-2 slide-card p-6 rounded-3xl border border-gray-100 flex flex-col items-center justify-center">
+                    <div class="relative w-full aspect-square max-w-[400px]">
+                        <canvas id="resultChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Traits Detail Area -->
+                <div class="lg:col-span-3 slide-card p-8 rounded-3xl border border-gray-100">
+                    <h3 class="text-xl font-bold mb-6 border-b pb-4">特性スコアの詳細</h3>
+                    <div id="traits-list" class="space-y-4">
+                        <!-- JS injects trait details here -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-16 text-center">
+                <button onclick="location.reload()" class="bg-gray-900 hover:bg-gray-800 text-white font-medium py-4 px-12 rounded-full transition-shadow shadow-xl hover:shadow-gray-500/20 text-lg flex items-center justify-center mx-auto gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                    最初からやり直す
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- 1. Data Definitions ---
+        
+        // Traits definitions
+        const TRAITS = {
+            'O': { name: '開放性', color: '#3b82f6', desc: '知的好奇心や新しい経験を受け入れる傾向' },
+            'C': { name: '誠実性', color: '#10b981', desc: '計画性、責任感、目的達成への意志' },
+            'E': { name: '外向性', color: '#f59e0b', desc: '社交性、活動性、他者との関わりを好む傾向' },
+            'A': { name: '協調性', color: '#ef4444', desc: '他者への思いやり、共感性、調和を好む傾向' },
+            'N': { name: '神経症的傾向', color: '#8b5cf6', desc: 'ストレスへの敏感さ、不安の感じやすさ' }
+        };
+
+        // Exactly 5 questions (1 for each trait)
+        const QUESTIONS = [
+            { id: 1, trait: "O", text: "新しいアイデアや未知の経験に対して、常にオープンである。" },
+            { id: 2, trait: "C", text: "物事を計画的に進め、決めたことは最後までやり遂げる。" },
+            { id: 3, trait: "E", text: "初対面の人ともすぐに打ち解け、会話の中心になることが多い。" },
+            { id: 4, trait: "A", text: "他人の気持ちに敏感で、困っている人がいると放っておけない。" },
+            { id: 5, trait: "N", text: "プレッシャーがかかる状況では、人よりも不安やストレスを感じやすい。" }
+        ];
+
+        // STRICT REQUIREMENT: Exactly 5 answer choices for every question.
+        const CHOICES = [
+            { value: 1, text: "1. まったく当てはまらない" },
+            { value: 2, text: "2. あまり当てはまらない" },
+            { value: 3, text: "3. どちらとも言えない" },
+            { value: 4, text: "4. やや当てはまる" },
+            { value: 5, text: "5. とても当てはまる" }
+        ];
+
+        // --- 2. Application State ---
+        let currentIndex = 0;
+        let userScores = { 'O': 0, 'C': 0, 'E': 0, 'A': 0, 'N': 0 };
+        let radarChart = null;
+
+        // --- 3. UI/Navigation Logic ---
+
+        // Screen transition
+        function goToSlide(screenId) {
+            document.querySelectorAll('.screen').forEach(s => {
+                s.classList.remove('active');
+            });
+            setTimeout(() => {
+                document.getElementById(screenId).classList.add('active');
+                window.scrollTo(0, 0);
+            }, 50);
+        }
+
+        // Start test
+        function startTest() {
+            currentIndex = 0;
+            userScores = { 'O': 0, 'C': 0, 'E': 0, 'A': 0, 'N': 0 };
+            goToSlide('screen-test');
+            renderQuestion();
+        }
+
+        // --- STREAMING_CHUNK:Rendering Questions & Choices... ---
+        function renderQuestion() {
+            const q = QUESTIONS[currentIndex];
+            
+            // Update texts
+            document.getElementById('question-text').innerText = q.text;
+            document.getElementById('progress-text').innerText = `${currentIndex + 1} / ${QUESTIONS.length}`;
+            
+            // Update Progress Bar
+            const progressPercent = ((currentIndex) / QUESTIONS.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            // Render Choices strictly using 5 options
+            const choicesContainer = document.getElementById('choices-container');
+            choicesContainer.innerHTML = ''; // Clear previous
+
+            CHOICES.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = "choice-btn w-full text-left bg-white border-2 border-gray-100 rounded-xl p-4 md:p-5 text-gray-700 font-medium text-lg flex items-center justify-between";
+                
+                // Content of button
+                btn.innerHTML = `
+                    <span>${choice.text}</span>
+                    <div class="w-6 h-6 rounded-full border-2 border-gray-300 flex-shrink-0 ml-4 group-hover:border-blue-500"></div>
+                `;
+                
+                // Add click event
+                btn.onclick = () => handleAnswer(q.trait, choice.value);
+                choicesContainer.appendChild(btn);
+            });
+        }
+
+        // Handle user selection
+        function handleAnswer(trait, value) {
+            // Save score
+            userScores[trait] = value;
+            
+            // Move to next
+            currentIndex++;
+            if (currentIndex < QUESTIONS.length) {
+                // Update progress visual before switching
+                document.getElementById('progress-bar').style.width = `${(currentIndex / QUESTIONS.length) * 100}%`;
+                
+                // Brief fade out/in effect for content
+                const container = document.getElementById('question-text').parentElement;
+                container.style.opacity = 0;
+                
+                setTimeout(() => {
+                    renderQuestion();
+                    container.style.opacity = 1;
+                    container.style.transition = "opacity 0.3s";
+                }, 300);
+            } else {
+                finishTest();
+            }
+        }
+
+        // --- STREAMING_CHUNK:Processing Results & Chart Generation... ---
+        function finishTest() {
+            document.getElementById('progress-bar').style.width = "100%";
+            setTimeout(() => {
+                generateResults();
+                goToSlide('screen-result');
+            }, 400);
+        }
+
+        function generateResults() {
+            // 1. Render Traits List
+            const listDiv = document.getElementById('traits-list');
+            listDiv.innerHTML = '';
+
+            const dataPoints = [];
+            const labels = [];
+
+            // Define order
+            const order = ['O', 'C', 'E', 'A', 'N'];
+
+            order.forEach(traitKey => {
+                const score = userScores[traitKey];
+                const trait = TRAITS[traitKey];
+                
+                labels.push(trait.name);
+                dataPoints.push(score);
+
+                // Create list item
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100";
+                item.innerHTML = `
+                    <div>
+                        <div class="font-bold text-gray-800 text-lg flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full" style="background-color: ${trait.color}"></span>
+                            ${trait.name}
+                        </div>
+                        <div class="text-sm text-gray-500 mt-1">${trait.desc}</div>
+                    </div>
+                    <div class="text-2xl font-black text-gray-900 ml-4">${score}<span class="text-sm font-normal text-gray-400">/5</span></div>
+                `;
+                listDiv.appendChild(item);
+            });
+
+            // 2. Render Chart.js Radar Chart
+            const ctx = document.getElementById('resultChart').getContext('2d');
+            
+            if (radarChart) {
+                radarChart.destroy();
+            }
+
+            radarChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'あなたのスコア',
+                        data: dataPoints,
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 5,
+                            ticks: {
+                                stepSize: 1,
+                                display: true,
+                                color: '#9ca3af',
+                                font: { size: 10 }
+                            },
+                            grid: {
+                                color: '#f3f4f6'
+                            },
+                            angleLines: {
+                                color: '#f3f4f6'
+                            },
+                            pointLabels: {
+                                font: {
+                                    family: "'Inter', sans-serif",
+                                    size: 14,
+                                    weight: '600'
+                                },
+                                color: '#374151'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
